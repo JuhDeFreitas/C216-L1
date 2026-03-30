@@ -29,7 +29,7 @@ Exemplo: `GES1`, `GES2`, `GEC1`.
 
 ### 1. Clone o repositório
 ```python
-cd 
+https://github.com/JuhDeFreitas/C216-L1.git
 ```
 
 
