@@ -1,1 +1,0 @@
-# Projeto não utiliza dependências externas
