@@ -1,0 +1,15 @@
+# Imagem base
+FROM python:3.11-slim
+
+# Diretório de trabalho dentro do container
+WORKDIR /app
+
+# Copia arquivos do projeto
+COPY . .
+
+# Instala dependências
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Comando que roda quando o container inicia
+CMD ["python", "src/main.py"]
+
