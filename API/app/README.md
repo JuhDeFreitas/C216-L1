@@ -73,4 +73,10 @@ Os testes cobrem:
 
 ![alt text](image-2.png)
 
+--- 
+
+Testes após correções da Aula 4:
+
+![alt text](image.png)
+
 ---

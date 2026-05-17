@@ -1,84 +1,110 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr
+from typing import List
 
 app = FastAPI()
 
-students = []
+# ===== Banco em memória =====
+students = {}
 
+# contador por curso (NÃO reinicia)
+course_counter = {
+    "GES": 0,
+    "GEC": 0
+}
+
+# ===== Model =====
+class Student(BaseModel):
+    nome: str
+    email: EmailStr
+    curso: List[str]
+
+
+# ===== Função para gerar ID =====
+def generate_id(curso):
+    if curso not in course_counter:
+        raise HTTPException(status_code=400, detail="Curso inválido")
+
+    course_counter[curso] += 1
+    return f"{curso}{course_counter[curso]}"
+
+
+# ===== ROOT =====
 @app.get("/")
 def root():
     return {"message": "API de alunos funcionando"}
 
-# Create 
-@app.post("/students")
-def create_student(student: dict):
-    required_fields = ["nome", "idade", "curso", "matricula"]
-    for field in required_fields:
-        if field not in student:
-            raise HTTPException(status_code=400, detail=f"Campo '{field}' é obrigatório")
 
-    student["id"] = len(students) + 1
-    students.append(student)
-    return student
+# ===== CREATE =====
+@app.post("/api/v1/alunos/")
+def create_student(student: Student):
+    
+    if len(student.curso) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Aluno deve possuir pelo menos 2 cursos"
+        )
 
-# Listar todos
-@app.get("/students")
+    curso_base = student.curso[0]
+
+    aluno_id = generate_id(curso_base)
+
+    new_student = {
+        "id": aluno_id,
+        "nome": student.nome,
+        "email": student.email,
+        "curso": student.curso,
+        "matricula": aluno_id
+    }
+
+    students[aluno_id] = new_student
+    return new_student
+
+
+# ===== LIST =====
+@app.get("/api/v1/alunos/")
 def list_students():
-    return students
+    return list(students.values())
 
-# Get por ID
-@app.get("/students/{student_id}")
-def get_student(student_id: int):
-    for student in students:
-        if student["id"] == student_id:
-            return student
-    raise HTTPException(status_code=404, detail="Aluno não encontrado")
 
-# Atualizar completamente dos dadsos do aluno
-@app.put("/students/{student_id}")
-def update_student(student_id: int, new_data: dict):
-    for i, student in enumerate(students):
-        if student["id"] == student_id:
-            students[i].update(new_data)
-            return students[i]
-    raise HTTPException(status_code=404, detail="Aluno não encontrado")
+# ===== GET BY ID =====
+@app.get("/api/v1/alunos/{aluno_id}")
+def get_student(aluno_id: str):
+    if aluno_id not in students:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
 
-#  Atualização parcial dos dados do aluno
-@app.patch("/students/{student_id}")
-def partial_update_student(student_id: int, new_data: dict):
-    for student in students:
-        if student["id"] == student_id:
-            student.update(new_data)
-            return student
-    raise HTTPException(status_code=404, detail="Aluno não encontrado")
+    return students[aluno_id]
 
-# Deletar aluno por ID
-@app.delete("/students/{student_id}")
-def delete_student(student_id: int):
-    for i, student in enumerate(students):
-        if student["id"] == student_id:
-            students.pop(i)
-            return {"message": "Aluno removido"}
-    raise HTTPException(status_code=404, detail="Aluno não encontrado")
 
-# Buscar por matrícula
-@app.get("/students/matricula/{matricula}")
-def get_by_matricula(matricula: str):
-    for student in students:
-        if student["matricula"] == matricula:
-            return student
-    raise HTTPException(status_code=404, detail="Aluno não encontrado")
+# ===== UPDATE (PATCH) =====
+@app.patch("/api/v1/alunos/{aluno_id}")
+def update_student(aluno_id: str, data: dict):
 
-# Filtrar por curso
-@app.get("/students/filter/curso")
-def filter_by_course(curso: str = Query(...)):
-    return [s for s in students if s.get("curso") == curso]
+    if aluno_id not in students:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
 
-# Filtrar por idade
-@app.get("/students/filter/idade")
-def filter_by_age(min_idade: int = Query(...)):
-    return [s for s in students if s.get("idade", 0) >= min_idade]
+    if "curso" in data and len(data["curso"]) < 2:
+        raise HTTPException(
+            status_code=400,
+            detail="Aluno deve possuir pelo menos 2 cursos"
+        )
 
-# Contagem total de alunos cadastrados
-@app.get("/students/count")
-def count_students():
-    return {"total": len(students)}
+    students[aluno_id].update(data)
+    return students[aluno_id]
+
+
+# ===== DELETE POR ID =====
+@app.delete("/api/v1/alunos/{aluno_id}")
+def delete_student(aluno_id: str):
+    if aluno_id not in students:
+        raise HTTPException(status_code=404, detail="Aluno não encontrado")
+
+    del students[aluno_id]
+    return {"message": "Aluno removido"}
+
+
+# ===== RESET LIST =====
+@app.delete("/api/v1/alunos/")
+def reset_students():
+    students.clear()
+    return {"message": "Lista de alunos resetada"}
