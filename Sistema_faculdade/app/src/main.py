@@ -1,4 +1,4 @@
-from aluno import Aluno
+from Sistema_faculdade.app.src.aluno import Aluno
 
 # Lista Global de alunos
 alunos = []
