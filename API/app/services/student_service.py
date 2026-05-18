@@ -1,7 +1,8 @@
 from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
+from API.app.db.models import StudentModel
 
-students = {}
 
 course_counter = {
     "GES": 0,
@@ -22,7 +23,8 @@ def generate_id(curso):
     return f"{curso}{course_counter[curso]}"
 
 
-def create_student(student):
+# CREATE
+def create_student(student, db: Session):
 
     if len(student.curso) < 2:
         raise HTTPException(
@@ -30,72 +32,122 @@ def create_student(student):
             detail="Aluno deve possuir pelo menos 2 cursos"
         )
 
-    curso_base = student.curso[0]
+    aluno_id = generate_id(
+        student.curso[0]
+    )
 
-    aluno_id = generate_id(curso_base)
+    db_student = StudentModel(
+        id=aluno_id,
+        nome=student.nome,
+        email=student.email,
+        curso=",".join(student.curso)
+    )
 
-    new_student = {
-        "id": aluno_id,
-        "nome": student.nome,
-        "email": student.email,
-        "curso": student.curso,
-        "matricula": aluno_id
+    db.add(db_student)
+
+    db.commit()
+
+    db.refresh(db_student)
+
+    return db_student
+
+
+# LIST
+def list_students(db: Session):
+
+    return db.query(
+        StudentModel
+    ).all()
+
+
+# GET BY ID
+def get_student(aluno_id, db: Session):
+
+    student = db.query(
+        StudentModel
+    ).filter(
+        StudentModel.id == aluno_id
+    ).first()
+
+    if not student:
+        raise HTTPException(
+            status_code=404,
+            detail="Aluno não encontrado"
+        )
+
+    return student
+
+
+# UPDATE
+def update_student(aluno_id, data, db: Session):
+
+    student = db.query(
+        StudentModel
+    ).filter(
+        StudentModel.id == aluno_id
+    ).first()
+
+    if not student:
+        raise HTTPException(
+            status_code=404,
+            detail="Aluno não encontrado"
+        )
+
+    if "curso" in data:
+
+        if len(data["curso"]) < 2:
+            raise HTTPException(
+                status_code=400,
+                detail="Aluno deve possuir pelo menos 2 cursos"
+            )
+
+        data["curso"] = ",".join(
+            data["curso"]
+        )
+
+    for key, value in data.items():
+        setattr(student, key, value)
+
+    db.commit()
+
+    db.refresh(student)
+
+    return student
+
+
+# DELETE
+def delete_student(aluno_id, db: Session):
+
+    student = db.query(
+        StudentModel
+    ).filter(
+        StudentModel.id == aluno_id
+    ).first()
+
+    if not student:
+        raise HTTPException(
+            status_code=404,
+            detail="Aluno não encontrado"
+        )
+
+    db.delete(student)
+
+    db.commit()
+
+    return {
+        "message": "Aluno removido"
     }
 
-    students[aluno_id] = new_student
 
-    return new_student
+# RESET
+def reset_students(db: Session):
 
+    db.query(
+        StudentModel
+    ).delete()
 
-def list_students():
-    return list(students.values())
+    db.commit()
 
-
-def get_student(aluno_id):
-
-    if aluno_id not in students:
-        raise HTTPException(
-            status_code=404,
-            detail="Aluno não encontrado"
-        )
-
-    return students[aluno_id]
-
-
-def update_student(aluno_id, data):
-
-    if aluno_id not in students:
-        raise HTTPException(
-            status_code=404,
-            detail="Aluno não encontrado"
-        )
-
-    if "curso" in data and len(data["curso"]) < 2:
-        raise HTTPException(
-            status_code=400,
-            detail="Aluno deve possuir pelo menos 2 cursos"
-        )
-
-    students[aluno_id].update(data)
-
-    return students[aluno_id]
-
-
-def delete_student(aluno_id):
-
-    if aluno_id not in students:
-        raise HTTPException(
-            status_code=404,
-            detail="Aluno não encontrado"
-        )
-
-    del students[aluno_id]
-
-    return {"message": "Aluno removido"}
-
-
-def reset_students():
-
-    students.clear()
-
-    return {"message": "Lista de alunos resetada"}
+    return {
+        "message": "Lista de alunos resetada"
+    }

@@ -1,16 +1,19 @@
 from fastapi import FastAPI
 
-from API.app.routes.student_routes import router as student_router
+from .routes.student_routes import router
+from .db.database import engine
+from .db.models import Base
 
 
 app = FastAPI()
 
 
-@app.get("/")
-def root():
-    return {
-        "message": "API de alunos funcionando"
-    }
+@app.on_event("startup")
+def startup():
+
+    Base.metadata.create_all(
+        bind=engine
+    )
 
 
-app.include_router(student_router)
+app.include_router(router)

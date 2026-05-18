@@ -1,6 +1,7 @@
-API
-uvicorn main:app --reload
-
-Swagger:
-
-http://localhost:8000/docs
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+pytest
+httpx
+email-validator
