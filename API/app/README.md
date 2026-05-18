@@ -2,9 +2,20 @@
 
 ## Descrição
 
-Esta aplicação consiste em uma API REST desenvolvida em **Python utilizando FastAPI**, responsável por gerenciar dados de alunos.
+Esta aplicação consiste em uma API REST desenvolvida em **Python utilizando FastAPI**, responsável pelo gerenciamento de dados de alunos.
 
-A API permite realizar operações de criação, consulta, atualização e remoção de registros, além de filtros e buscas específicas.
+A aplicação permite realizar operações de **criação, consulta, atualização e remoção de registros (CRUD)**, utilizando persistência de dados com **PostgreSQL**, integração via **SQLAlchemy** e execução em containers com **Docker**.
+
+---
+
+## Tecnologias Utilizadas
+
+- Python 3.11
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Docker / Docker Compose
+- Pytest
 
 ---
 
@@ -12,30 +23,84 @@ A API permite realizar operações de criação, consulta, atualização e remo�
 
 Cada aluno possui os seguintes atributos:
 
-* **Nome**
-* **Idade**
-* **Curso**
-* **Matrícula**
+- **ID**
+- **Nome**
+- **Email**
+- **Curso**
+- **Matrícula**
 
 ---
 
-## Como Executar a API
+## Banco de Dados
 
-1. Instale as dependências:
+A aplicação utiliza **PostgreSQL** para persistência dos dados.
+
+O mapeamento objeto-relacional (ORM) é realizado com **SQLAlchemy**, permitindo a comunicação entre a aplicação Python e o banco de dados.
+
+As tabelas são criadas automaticamente na inicialização da aplicação através do comando:
+
+```python
+Base.metadata.create_all(bind=engine)
+```
+
+---
+
+## Como Executar com Docker
+
+### 1. Construir e subir os containers
+
+```bash
+docker compose up --build -d
+```
+
+Este comando irá:
+
+- Criar o container da API FastAPI
+- Criar o container do PostgreSQL
+- Instalar todas as dependências
+- Inicializar o banco de dados
+- Disponibilizar a API na porta 8000
+
+---
+
+### 2. Verificar containers em execução
+
+```bash
+docker ps
+```
+
+Containers esperados:
+
+- `alunos_api`
+- `alunos_db`
+
+---
+
+### 3. Parar containers
+
+```bash
+docker compose down
+```
+
+---
+
+## Como Executar Localmente (sem Docker)
+
+### 1. Instalar dependências
 
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Execute o servidor:
+### 2. Executar aplicação
 
 ```bash
-uvicorn src.main:app --reload
+uvicorn main:app --reload
 ```
 
 ---
 
-## Documentação (Swagger)
+## Documentação Swagger
 
 Após iniciar a aplicação, acesse:
 
@@ -43,15 +108,63 @@ Após iniciar a aplicação, acesse:
 http://localhost:8000/docs
 ```
 
-Interface interativa para testar todos os endpoints da API.
+A interface Swagger permite testar todos os endpoints da API de forma interativa.
+
+---
+
+## Endpoints Disponíveis
+
+### Criar aluno
+
+```http
+POST /api/v1/alunos/
+```
+
+### Listar alunos
+
+```http
+GET /api/v1/alunos/
+```
+
+### Buscar aluno por ID
+
+```http
+GET /api/v1/alunos/{id}
+```
+
+### Atualizar aluno
+
+```http
+PATCH /api/v1/alunos/{id}
+```
+
+### Remover aluno
+
+```http
+DELETE /api/v1/alunos/{id}
+```
+
+### Resetar base de alunos
+
+```http
+DELETE /api/v1/alunos/
+```
 
 ---
 
 ## Testes Automatizados
 
-Os testes foram desenvolvidos utilizando **pytest**, cobrindo as principais rotas da API.
+Os testes foram desenvolvidos utilizando **pytest**, cobrindo:
 
-Para executar os testes:
+- Criação de alunos
+- Consulta de registros
+- Busca por ID
+- Atualização
+- Remoção
+- Validação de regras de negócio
+- Reset de registros
+
+### Executar testes
 
 ```bash
 pytest -v
@@ -59,25 +172,40 @@ pytest -v
 
 ---
 
-## Testes
+## Evidências dos Testes
 
-Abaixo está um exemplo da execução dos testes com sucesso:
+### Testes iniciais
 
-Os testes cobrem:
-
-- Criação de alunos
-- Consulta (lista e por ID/matrícula)
-- Atualização (total e parcial)
-- Remoção
-- Tratamento de erros (ex: aluno não encontrado)
-
-![alt text](/API/app/images/image-2.png)
-
---- 
-
-Testes após correções da Aula 4:
-
-![alt text](/API/app/images/image.png)
+![Testes](/API/app/images/image-2.png)
 
 ---
-![alt text](image.png)
+
+### Testes após correções
+
+![Testes corrigidos](/API/app/images/image.png)
+
+---
+
+### Testes com integração ao PostgreSQL
+
+![Testes PostgreSQL](/API/app/images/image-3.png)
+
+---
+
+## Arquitetura do Projeto
+
+```text
+app/
+├── db/
+├── routes/
+├── schemas/
+├── services/
+├── tests/
+├── main.py
+├── docker-compose.yml
+├── dockerfile
+└── requirements.txt
+```
+
+---
+
