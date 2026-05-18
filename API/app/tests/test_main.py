@@ -4,9 +4,9 @@ import os
 from fastapi.testclient import TestClient
 
 # Ajuste de path (caso rode dentro de /tests)
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from src.main import app
+from API.app.main import app
 
 client = TestClient(app)
 

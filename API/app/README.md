@@ -71,12 +71,12 @@ Os testes cobrem:
 - Remoção
 - Tratamento de erros (ex: aluno não encontrado)
 
-![alt text](image-2.png)
+![alt text](/API/app/images/image-2.png)
 
 --- 
 
 Testes após correções da Aula 4:
 
-![alt text](image.png)
+![alt text](/API/app/images/image.png)
 
 ---
